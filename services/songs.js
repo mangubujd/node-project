@@ -2,8 +2,8 @@
 var Promise = require('bluebird');
 var Songs = Promise.promisifyAll(require('../database/songs'));
 
-exports.findAll = function() {
-    return Songs.findAsync();
+exports.find = function(query) {
+    return Songs.findAsync(query);
 };
 
 exports.findOneByQuery = function(query) {

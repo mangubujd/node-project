@@ -4,7 +4,7 @@ var router = express.Router();
 var SongService = require('../services/songs');
 
 router.get('/', function(req, res) {
-    SongService.findAll()
+    SongService.find(req.query || {})
         .then(function(songs) {
             res.status(200).send(songs);
         })
