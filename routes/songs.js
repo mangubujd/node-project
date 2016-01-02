@@ -27,6 +27,18 @@ router.get('/:id', function(req, res) {
     ;
 });
 
+router.get('/artist/:artist', function(req, res) {
+    SongService.find({artist: {$regex: req.params.artist, $options: 'i'}})
+        .then(function(songs) {
+            res.status(200).send(songs);
+        })
+        .catch(function(err) {
+            console.log(err);
+            res.status(500).send(err);
+        })
+    ;
+});
+
 var songBodyVerification = function(body) {
     var attributes = _.keys(body);
     var mandatoryAttributes = ['title', 'album', 'artist'];
