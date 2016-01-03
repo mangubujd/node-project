@@ -12,19 +12,29 @@ router.get('/', function(req, res) {
 });
 
 router.get('/:id', function(req, res) {
-    SongService.findOneByQuery({_id: req.params.id})
-        .then(function(song) {
-            if (!song) {
-                res.status(404).send({err: 'No song found with id' + req.params.id});
-                return;
-            }
-            res.status(200).send(song);
-        })
-        .catch(function(err) {
-            console.log(err);
-            res.status(500).send(err);
-        })
-    ;
+    if (req.accepts('text/html') || req.accepts('application/json')) {
+        SongService.findOneByQuery({_id: req.params.id})
+            .then(function(song) {
+                if (!song) {
+                    res.status(404).send({err: 'No song found with id' + req.params.id});
+                    return;
+                }
+                if (req.accepts('text/html')) {
+                    return res.render('song', {song: song});
+                }
+                if (req.accepts('application/json')) {
+                    return res.send(200, song);
+                }
+            })
+            .catch(function(err) {
+                console.log(err);
+                res.status(500).send(err);
+            })
+        ;
+    }
+    else {
+        res.status(406).send({err: 'Not valid type for asked ressource'});
+    }
 });
 
 router.get('/artist/:artist', function(req, res) {
