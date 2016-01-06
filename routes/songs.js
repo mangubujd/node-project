@@ -27,7 +27,7 @@ router.get('/add', function(req, res) {
     if (req.accepts('text/html')) {
         req.session.song = null;
         req.session.err = null;
-        return res.render('editSong', {song: song, err: err});
+        return res.render('newSong', {song: song, err: err});
     }
     else {
         res.status(406).send({err: 'Not valid type for asked ressource'});
@@ -124,6 +124,25 @@ router.delete('/', function(req, res) {
     ;
 });
 
+router.get('/edit/:id', function(req, res) {
+    var song = (req.session.song) ? req.session.song : {};
+    var err = (req.session.err) ? req.session.err : null;
+    if (req.accepts('text/html')) {
+        SongService.findOneByQuery({_id: req.params.id})
+            .then(function(song) {
+                if (!song) {
+                    res.status(404).send({err: 'No song found with id' + req.params.id});
+                    return;
+                }
+                return res.render('editSong', {song: song, err: err});
+            })
+        ;
+    }
+    else {
+        res.status(406).send({err: 'Not valid type for asked ressource'});
+    }
+});
+
 router.put('/:id', function(req, res) {
     SongService.updateSongById(req.params.id, req.body)
         .then(function (song) {
@@ -131,7 +150,12 @@ router.put('/:id', function(req, res) {
                 res.status(404).send({err: 'No song found with id' + req.params.id});
                 return;
             }
-            res.status(200).send(song);
+            if (req.accepts('text/html')) {
+                return res.redirect('/songs/' + song._id);
+            }
+            if (req.accepts('application/json')) {
+                res.status(200).send(song);
+            }
         })
         .catch(function (err) {;
             res.status(500).send(err);

@@ -9,4 +9,6 @@
    <% if (song.bpm) { %>
       BPM   : <%=song.bpm%><br/>
    <% } %>
+   <br/>
+   <a href="/songs/edit/<%=song._id%>">Editer</a> | <a href="/songs">Tous les chansons</a>
 <% include partials/footer %>
