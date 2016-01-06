@@ -11,6 +11,19 @@ router.get('/', function(req, res) {
     ;
 });
 
+router.get('/add', function(req, res) {
+    var song = (req.session.song) ? req.session.song : {};
+    var err = (req.session.err) ? req.session.err : null;
+    if (req.accepts('text/html')) {
+        req.session.song = null;
+        req.session.err = null;
+        return res.render('editSong', {song: song, err: err});
+    }
+    else {
+        res.status(406).send({err: 'Not valid type for asked ressource'});
+    }
+});
+
 router.get('/:id', function(req, res) {
     if (req.accepts('text/html') || req.accepts('application/json')) {
         SongService.findOneByQuery({_id: req.params.id})
@@ -49,31 +62,45 @@ router.get('/artist/:artist', function(req, res) {
     ;
 });
 
-var songBodyVerification = function(body) {
-    var attributes = _.keys(body);
+var songBodyVerification = function(req, res, next) {
+    var attributes = _.keys(req.body);
     var mandatoryAttributes = ['title', 'album', 'artist'];
     var missingAttributes = _.difference(mandatoryAttributes, attributes);
-    if (!missingAttributes.length) {
-        return;
-    }
-    return missingAttributes.toString();
-};
-
-router.post('/', function(req, res) {
-    var missingAttributes = songBodyVerification(req.body);
-    if (!missingAttributes) {
-        SongService.create(req.body)
-            .then(function(song) {
-                res.status(201).send(song);
-            })
-            .catch(function(err) {
-                res.status(500).send(err);
-            })
-        ;
+    if (missingAttributes.length) {
+        res.status(400).send({err: missingAttributes.toString()});
     }
     else {
-        res.status(400).send({err: missingAttributes});
+        if (req.body.title && req.body.album && req.body.artist) {
+            next();
+        }
+        else {
+            var error = mandatoryAttributes.toString() + ' are mandatory';
+            if (req.accepts('text/html')) {
+                req.session.err = error;
+                req.session.song = req.body;
+                res.redirect('/songs/add');
+            }
+            else {
+                res.status(400).send({err: error});
+            }
+        }
     }
+};
+
+router.post('/', songBodyVerification, function(req, res) {
+    SongService.create(req.body)
+        .then(function(song) {
+            if (req.accepts('text/html')) {
+                return res.redirect('/songs/' + song._id);
+            }
+            if (req.accepts('application/json')) {
+                return res.status(201).send(song);
+            }
+        })
+        .catch(function(err) {
+            res.status(500).send(err);
+        })
+    ;
 });
 
 router.delete('/', function(req, res) {
