@@ -3,6 +3,8 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
+var passport = require('passport');
+var authentication = require('./services/authentication');
 var session = require('express-session');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
@@ -37,11 +39,39 @@ app.use(session(sess));
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
 
+passport.serializeUser(function(user, done) {
+    done(null, user);
+});
+passport.deserializeUser(function(obj, done) {
+    done(null, obj);
+});
+passport.use(authentication.songApiLocalStrategy());
+app.use(passport.initialize());
+app.use(passport.session());
+
+var verifyAuth = function(req, res, next) {
+    console.log('originalUrl', req.originalUrl);
+    if (req.originalUrl === '/signup' || req.originalUrl === '/login') {
+        return next();
+    }
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    if (req.accepts('text/html')) {
+        return res.redirect('/login');
+    }
+    if (req.accepts('application/json')) {
+        res.set('Location', '/login');
+        return res.status(401).send({err: 'User should be logged'});
+    }
+};
+app.use(verifyAuth);
+
 app.use('/', routes);
+app.use('/login', login);
 app.use('/users', users);
 app.use('/songs', songs);
 app.use('/signup', signup);
-app.use('/login', login);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
