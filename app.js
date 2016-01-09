@@ -50,7 +50,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 var verifyAuth = function(req, res, next) {
-    console.log('originalUrl', req.originalUrl);
     if (req.originalUrl === '/signup' || req.originalUrl === '/login') {
         return next();
     }
@@ -72,6 +71,11 @@ app.use('/login', login);
 app.use('/users', users);
 app.use('/songs', songs);
 app.use('/signup', signup);
+
+app.get('/logout', function(req, res){
+    req.logout();
+    res.redirect('/login');
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
