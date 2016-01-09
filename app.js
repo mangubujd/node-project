@@ -50,10 +50,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 var verifyAuth = function(req, res, next) {
+    res.locals.user_session = false;
+    res.locals.user_admin = false;
     if (req.originalUrl === '/signup' || req.originalUrl === '/login') {
         return next();
     }
     if (req.isAuthenticated()) {
+        res.locals.user_session = true;
+        res.locals.user_admin = (req.user.username === 'admin');
         return next();
     }
     if (req.accepts('text/html')) {

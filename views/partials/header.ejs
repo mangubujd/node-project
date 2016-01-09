@@ -8,3 +8,9 @@
      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
    <![endif]-->
  </head>
+ <body>
+    <% if (user_session) {%>
+    <div style="display: block; width: 100%; text-align: right;">
+        <a href="/logout">Logout</a>
+    </div>
+    <%}%>
