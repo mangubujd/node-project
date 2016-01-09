@@ -3,6 +3,15 @@ var _ = require('lodash');
 var router = express.Router();
 var SongService = require('../services/songs');
 
+var verifyIsAdmin = function(req, res, next) {
+    if (req.isAuthenticated() && req.user.username === 'admin') {
+        return next();
+    }
+    else {
+        res.status(403).send({err: 'Current user can not access to this operation'});
+    }
+};
+
 router.get('/', function(req, res) {
     if (req.accepts('text/html') || req.accepts('application/json')) {
         SongService.find(req.query || {})
@@ -97,7 +106,7 @@ var songBodyVerification = function(req, res, next) {
     }
 };
 
-router.post('/', songBodyVerification, function(req, res) {
+router.post('/', verifyIsAdmin, songBodyVerification, function(req, res) {
     SongService.create(req.body)
         .then(function(song) {
             if (req.accepts('text/html')) {
@@ -113,7 +122,7 @@ router.post('/', songBodyVerification, function(req, res) {
     ;
 });
 
-router.delete('/', function(req, res) {
+router.delete('/', verifyIsAdmin, function(req, res) {
     SongService.deleteAll()
         .then(function(songs) {
             res.status(200).send(songs);
@@ -124,7 +133,7 @@ router.delete('/', function(req, res) {
     ;
 });
 
-router.get('/edit/:id', function(req, res) {
+router.get('/edit/:id', verifyIsAdmin, function(req, res) {
     var song = (req.session.song) ? req.session.song : {};
     var err = (req.session.err) ? req.session.err : null;
     if (req.accepts('text/html')) {
@@ -143,7 +152,7 @@ router.get('/edit/:id', function(req, res) {
     }
 });
 
-router.put('/:id', function(req, res) {
+router.put('/:id', verifyIsAdmin, function(req, res) {
     SongService.updateSongById(req.params.id, req.body)
         .then(function (song) {
             if (!song) {
@@ -157,13 +166,13 @@ router.put('/:id', function(req, res) {
                 res.status(200).send(song);
             }
         })
-        .catch(function (err) {;
+        .catch(function (err) {
             res.status(500).send(err);
         })
     ;
 });
 
-router.delete('/:id', function(req, res) {
+router.delete('/:id', verifyIsAdmin, function(req, res) {
     SongService.removeAsync({_id: req.params.id})
         .then(function() {
             res.status(204);
