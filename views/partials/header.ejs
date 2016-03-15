@@ -3,14 +3,20 @@
  <head>
    <meta charset="utf-8">
    <title>Social Music</title>
-   <!-- HTML5 shim, for IE6-8 support of HTML elements -->
-   <!--[if lt IE 9]>
-     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-   <![endif]-->
+     <!-- Compiled and minified CSS -->
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
  </head>
  <body>
-    <% if (user_session) {%>
-    <div style="display: block; width: 100%; text-align: right;">
-        <a href="/logout">Logout</a>
-    </div>
-    <%}%>
+ <% if (user_session) { %>
+ <nav>
+     <div class="nav-wrapper">
+         <a href="http://localhost:3000/" class="brand-logo">HOME</a>
+         <ul id="nav-mobile" class="right hide-on-med-and-down">
+             <li><a href="/songs">MusicTheque</a></li>
+             <li><a href="/users">Réseau d'utilisateurs</a></li>
+             <li><a href="/users/<%= user_in_run._id %>"><%= user_in_run.displayName %></a></li>
+             <li><a href="/logout">Déconnexion</a></li>
+         </ul>
+     </div>
+ </nav>
+<% } %>

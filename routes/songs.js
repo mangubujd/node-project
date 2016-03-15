@@ -2,28 +2,33 @@ var express = require('express');
 var _ = require('lodash');
 var router = express.Router();
 var SongService = require('../services/songs');
+var ScoreService = require('../services/scores');
 
+//ADMIN VERIFICATION
 var verifyIsAdmin = function(req, res, next) {
     if (req.isAuthenticated() && req.user.username === 'admin') {
         return next();
     }
     else {
-        res.status(403).send({err: 'Current user can not access to this operation'});
+        res.status(403).send({err: 'You can not access to this section' });
     }
-};
+}
 
 router.get('/', function(req, res) {
     if (req.accepts('text/html') || req.accepts('application/json')) {
-        SongService.find(req.query || {})
+        var queryParams = {};
+        if(Object.keys(req.query).length !== 0 && JSON.stringify(req.query) !== JSON.stringify({})){
+            queryParams[req.query.selection] = req.query.value;
+        }
+        SongService.find(queryParams || {})
             .then(function(songs) {
                 if (req.accepts('text/html')) {
-                    return res.render('songs', {songs: songs});
+                    return res.render('songs', {songs: songs, nbSongs: songs.length});
                 }
                 if (req.accepts('application/json')) {
                     res.status(200).send(songs);
                 }
-            })
-        ;
+            });
     }
     else {
         res.status(406).send({err: 'Not valid type for asked ressource'});
@@ -45,18 +50,31 @@ router.get('/add', function(req, res) {
 
 router.get('/:id', function(req, res) {
     if (req.accepts('text/html') || req.accepts('application/json')) {
-        SongService.findOneByQuery({_id: req.params.id})
+        var songID = req.params.id;
+        SongService.findOneByQuery({_id: songID})
             .then(function(song) {
                 if (!song) {
-                    res.status(404).send({err: 'No song found with id' + req.params.id});
+                    res.status(404).send({err: 'No song found with id' + songID});
                     return;
                 }
-                if (req.accepts('text/html')) {
-                    return res.render('song', {song: song});
-                }
-                if (req.accepts('application/json')) {
-                    return res.send(200, song);
-                }
+                ScoreService.findOneByQuery({ id_scorer: req.user._id, id_song: song._id})
+                    .then(function(score){
+                        var isFavorite = false;
+                        if(req.user.favoriteSongs.indexOf(songID) != -1){
+                            isFavorite = true
+                        }
+                        if (req.accepts('text/html')) {
+                            return res.render('song', {song: song, score: score, isFavorite: isFavorite});
+                        }
+                        if (req.accepts('application/json')) {
+                            var reponse = {
+                                song: song,
+                                score: score,
+                                isFavorite : isFavorite
+                            };
+                            return res.send(200, reponse);
+                        }
+                    });
             })
             .catch(function(err) {
                 console.log(err);
@@ -181,6 +199,40 @@ router.delete('/:id', verifyIsAdmin, function(req, res) {
             res.status(500).send(err);
         })
     ;
+});
+
+router.post('/:id/score', function(req, res) {
+    SongService.findOneByQuery({_id: req.params.id})
+        .then(function(song) {
+            if (!song) {
+                res.status(404).send({err: 'No song found with id' + req.params.id});
+                return;
+            }
+            var newScore = {id_scorer: req.user._id, id_song: song._id};
+
+            ScoreService.findOneByQuery(newScore)
+                .then(function(score) {
+                    if (score) {
+                        res.status(403).send();
+                        return;
+                    }
+                    newScore.score = req.body.score;
+                    ScoreService.create(newScore)
+                        .then(function() {
+                            return res.redirect('/songs/' + song._id);
+                        })
+                        .catch(function(err) {
+                            res.status(500).send(err);
+                        });
+                })
+                .catch(function(err) {
+                    res.status(500).send(err);
+                });
+        })
+        .catch(function(err) {
+            console.log(err);
+            res.status(500).send(err);
+        });
 });
 
 module.exports = router;

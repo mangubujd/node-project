@@ -6,6 +6,7 @@ var userSchema = mongoose.Schema({
     password: {type: String, required: true, select: false},
     displayName: {type: String, required: true},
     favoriteSongs: [String],
+    friends: [String],
     createdAt: {type: Date, 'default': Date.now}
 });
 

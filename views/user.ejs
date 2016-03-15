@@ -1,0 +1,64 @@
+<% include partials/header %>
+<div class="container">
+    <div class="row">
+        <div class="col s12 m4 l2"><p></p></div>
+        <div class="col s12 m4 l8">
+            <p>
+                <h1>
+                    <%= profileUser.username %> - <%= profileUser.displayName %>
+                </h1>
+            </p>
+        </div>
+        <div class="col s12 m4 l2"><p></p></div>
+    </div>
+
+    <div class="row">
+        <div class="col s12 m4 l2"><p></p></div>
+        <div class="col s12 m4 l8">
+            <p>
+                <h2>Chansons favories</h2>
+                <% if(profileUser._id === user_in_run._id) {%>
+                <div class="row">
+                    <form method="post" action="/myaccount/songs/favorites/remove?_method=delete">
+                        <button class="btn btn-link" type="submit">Supprimer tous les favoris</button>
+                    </form>
+                </div>
+                <% } %>
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col s12 m4 l2"><p></p></div>
+        <div class="col s12 m4 l8">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <% if(profileUser._id == user_in_run._id){ %>
+                    <th>Supprimer des favoris</th>
+                    <% } %>
+                    <th>Titre</th>
+                    <th>Artiste</th>
+                    <th>Score</th>
+                </tr>
+                </thead>
+                <% favoriteSongs.forEach(function(song) { %>
+                <tr>
+                    <%if(profileUser._id == user_in_run._id) {%>
+                    <td>
+                        <form method="post" action="/users/song/favorites/remove?_method=delete">
+                            <input style="display:none"  name="song_id" id="song_id" value="<%= song._id %>">
+                            <button class="btn btn-link" type="submit">SUPPRIMER</button>
+                        </form>
+                    </td>
+                    <% } %>
+                    <td><a href="/songs/<%= song._id %>"><%= song.title %></a></td>
+                    <td><%= song.artist %></td>
+
+                </tr>
+                <% })%>
+            </table>
+        </div>
+        <div class="col s12 m4 l2"><p></p></div>
+    </div>
+</div>
+<% include partials/footer %>

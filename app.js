@@ -12,6 +12,7 @@ var methodOverride = require('method-override');
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var songs = require('./routes/songs');
+var friendasks = require('./routes/friendasks');
 var signup = require('./routes/signup');
 var login = require('./routes/login');
 var database = require('./database');
@@ -42,22 +43,29 @@ app.use(express.static(path.join(__dirname, 'public')));
 passport.serializeUser(function(user, done) {
     done(null, user);
 });
-passport.deserializeUser(function(obj, done) {
-    done(null, obj);
+passport.deserializeUser(function(user, done) {
+    done(null, user);
 });
+
+/*passport.serializeUser(users.serializeUser());
+passport.deserializeUser(users.deserializeUser());*/
+
 passport.use(authentication.songApiLocalStrategy());
 app.use(passport.initialize());
 app.use(passport.session());
 
-var verifyAuth = function(req, res, next) {
+var verifyAuth;
+verifyAuth = function (req, res, next) {
     res.locals.user_session = false;
     res.locals.user_admin = false;
+    console.log(res.locals.user_name);
     if (req.originalUrl === '/signup' || req.originalUrl === '/login') {
         return next();
     }
     if (req.isAuthenticated()) {
         res.locals.user_session = true;
         res.locals.user_admin = (req.user.username === 'admin');
+        user_in_run = req.user;
         return next();
     }
     if (req.accepts('text/html')) {
@@ -75,6 +83,7 @@ app.use('/login', login);
 app.use('/users', users);
 app.use('/songs', songs);
 app.use('/signup', signup);
+app.use('/friendasks', friendasks);
 
 app.get('/logout', function(req, res){
     req.logout();
@@ -111,6 +120,7 @@ app.use(function(err, req, res, next) {
     error: {}
   });
 });
+
 
 
 module.exports = app;
