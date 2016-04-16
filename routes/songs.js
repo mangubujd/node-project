@@ -18,6 +18,8 @@ router.get('/', function(req, res) {
     if (req.accepts('text/html') || req.accepts('application/json')) {
         var queryParams = {};
         if(Object.keys(req.query).length !== 0 && JSON.stringify(req.query) !== JSON.stringify({})){
+            // En utilisant lodash t'aurais pu écrire cette validation comme ça
+            // if (!_.isEmpty(req.query))
             queryParams[req.query.selection] = req.query.value;
         }
         SongService.find(queryParams || {})
@@ -61,6 +63,9 @@ router.get('/:id', function(req, res) {
                     .then(function(score){
                         var isFavorite = false;
                         if(req.user.favoriteSongs.indexOf(songID) != -1){
+                            // malheuresement dans la route où tu rajoute les favorites tu ne mets pas à jour
+                            // req.user.favoritesSongs, donc la vue ne se mets pas à jour après la selection d'une chanson
+                            // on est obligé de se deconnecter et reconnecter pour que le bouton change à RMV FAV
                             isFavorite = true
                         }
                         if (req.accepts('text/html')) {
@@ -74,6 +79,7 @@ router.get('/:id', function(req, res) {
                             };
                             return res.send(200, reponse);
                         }
+                        // good !
                     });
             })
             .catch(function(err) {
@@ -194,6 +200,7 @@ router.delete('/:id', verifyIsAdmin, function(req, res) {
     SongService.removeAsync({_id: req.params.id})
         .then(function() {
             res.status(204);
+            // Attention, t'as pas mis de send, du coup on tombe dans un timeout ici
         })
         .catch(function(err) {
             res.status(500).send(err);
@@ -214,6 +221,8 @@ router.post('/:id/score', function(req, res) {
                 .then(function(score) {
                     if (score) {
                         res.status(403).send();
+                        // Il manque un message plus clair dans le send pour indique c'est quoi exactement le problème
+                        // et en plus, 403 n'est pas exactement le bon code à utiliser mais plutôt 409 Conflict
                         return;
                     }
                     newScore.score = req.body.score;
