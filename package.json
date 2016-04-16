@@ -1,5 +1,6 @@
 {
   "name": "social-music-api-ortega",
+  // t'aurais pu changer ceci
   "version": "0.0.0",
   "private": true,
   "scripts": {

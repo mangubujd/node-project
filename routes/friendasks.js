@@ -9,6 +9,7 @@ var UserService = require('../services/users');
 router.post('/', function(req, res) {
     var friendID = req.body.id_receiver;
     FriendasksService.create(req.body)
+    // une petite validation du body serait pas mal...
         .then(function(friendask) {
             if (req.accepts('text/html')) {
                 UserService.findOneByQuery({_id: friendID})
@@ -22,6 +23,7 @@ router.post('/', function(req, res) {
             }
             if (req.accepts('application/json')) {
                 return res.status(200);
+                // Attention, 1. t'es en train de créer un friend request, donc status:201 et 2, pas de send donc timeout !!!
             }
         })
         .catch(function(err) {
@@ -31,6 +33,9 @@ router.post('/', function(req, res) {
 });
 
 router.get('/:id', function(req, res) {
+    // Ce dommage que cette URL n'est pas accessible depuis la vue... je sais pas exactement ce que tu voulais faire
+    // les friendRequests sont bien crées et stockés en base, par contre elles ne sont pas affichées chez son destinataire
+    // ni il y a un moyen pour les accepter ou refuser
     if (req.accepts('text/html') || req.accepts('application/json')) {
         FriendasksService.findOneByQuery({_id: req.params.id})
             .then(function(song) {
@@ -40,6 +45,7 @@ router.get('/:id', function(req, res) {
                 }
                 if (req.accepts('text/html')) {
                     return res.render('song', {song: song});
+                    // song ?? Normalement tu devrais l'afficher dans la page de l'user en session
                 }
                 if (req.accepts('application/json')) {
                     return res.send(200, song);
